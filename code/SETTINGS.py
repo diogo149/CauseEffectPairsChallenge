@@ -29,5 +29,10 @@ from sklearn.ensemble import GradientBoostingRegressor
 import numpy as np
 FC_TRAIN.CLF = GradientBoostingRegressor(loss='huber', n_estimators=5000, random_state=1, min_samples_split=2, min_samples_leaf=1, subsample=1.0, max_features=686, alpha=0.995355212043, max_depth=10, learning_rate=np.exp(-4.09679792914))
 
+# dummy data
 from sklearn.dummy import DummyRegressor
 FC_TRAIN.CLF = DummyRegressor()
+
+TEST_ONLY = Setting()
+TEST_ONLY.CLF_DIR = "../clf"
+TEST_ONLY.CLF_NAME = "5kfeat_(48060, 8563)"

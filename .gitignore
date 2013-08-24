@@ -36,3 +36,5 @@ nosetests.xml
 
 # this project's residual files
 code/*/*
+feature_importances.txt
+
