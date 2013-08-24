@@ -1,3 +1,4 @@
+
 class Setting(object):
     pass
 
@@ -35,4 +36,16 @@ FC_TRAIN.CLF = DummyRegressor()
 
 TEST_ONLY = Setting()
 TEST_ONLY.CLF_DIR = "../clf"
-TEST_ONLY.CLF_NAME = "5kfeat_(48060, 8563)"
+
+MODEL_NUMER = 1
+
+if MODEL_NUMER == 1:
+    FC_TRAIN.USE_ALL_FEAT = False
+    TEST_ONLY.CLF_NAME = "5kfeat_ga_subset3_(48060, 4257)"
+elif MODEL_NUMER == 2:
+    TEST_ONLY.CLF_NAME = "5kfeat_(48060, 8563)"
+elif MODEL_NUMER == 3:
+    FC_TRAIN.USE_ALL_FEAT = False
+    TEST_ONLY.CLF_NAME = "5kfeat_ga_subset2_(48060, 4257)"
+else:
+    raise Exception("Incorrect model number")
