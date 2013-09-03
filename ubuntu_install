@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Documentation of the exact steps taken in install in ubuntu 12.04 64-bit in AWS
+
+# download anaconda
+wget http://09c8d0b2229f813c1b93-c95ac804525aac4b6dba79b00b39d1d3.r79.cf1.rackcdn.com/Anaconda-1.6.1-Linux-x86_64.sh
+
+# install anaconda, selected all default options
+bash Anaconda-1.6.1-Linux-x86_64.sh
+
+# versions:
+# numpy 1.7.1
+# scipy 0.12.0
+# pandas 0.11.0
+# scikit-learn 0.13.1
+# ipython 0.13.2
+
+sudo aptitude install git
+
+git clone https://github.com/diogo149/CauseEffectPairsChallenge.git
+
+cd ~/CauseEffectPairsChallenge/clf
+wget "https://s3-us-west-2.amazonaws.com/causeeffectpairs/code/clfs/5kfeat_ga_subset3_(48060, 4257).pickle"
+
+cd ~/CauseEffectPairsChallenge/code
+
+python test_only.py

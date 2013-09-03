@@ -33,10 +33,10 @@ import gc
 from pdb import set_trace
 from os import makedirs, path
 from datetime import datetime
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import LabelBinarizer  # @UnresolvedImport
 
-from decorators import default_catcher
-import SETTINGS
+from decorators import default_catcher  # @UnresolvedImport
+import SETTINGS  # @UnresolvedImport
 
 debug = set_trace
 
@@ -132,12 +132,13 @@ def hash_df(df):
 def quick_save(directory, filename, obj):
     """Quickly pickle an object in a file.
     """
-    try_mkdir(directory)
-    gc.disable()
-    new_filename = path.join(directory, filename + ".pickle")
-    with open(new_filename, 'w') as outfile:
-        pickle.dump(obj, outfile, pickle.HIGHEST_PROTOCOL)
-    gc.enable()
+    if SETTINGS.MISC.WRITE:
+        try_mkdir(directory)
+        gc.disable()
+        new_filename = path.join(directory, filename + ".pickle")
+        with open(new_filename, 'w') as outfile:
+            pickle.dump(obj, outfile, pickle.HIGHEST_PROTOCOL)
+        gc.enable()
 
 
 def quick_load(directory, filename):
@@ -154,10 +155,11 @@ def quick_load(directory, filename):
 def try_mkdir(directory):
     """ try to make directory
     """
-    try:
-        makedirs(directory)
-    except OSError:
-        pass
+    if SETTINGS.MISC.WRITE:
+        try:
+            makedirs(directory)
+        except OSError:
+            pass
 
 
 def binarize(data):
@@ -237,89 +239,3 @@ def interaction_terms(df, feat1, feat2):
 def add_index_to_columns(df):
     return pd.DataFrame(df.as_matrix(), columns=["{}_{}".format(i, j) for i, j in enumerate(df.columns)])
 
-
-""" ~~~~~~~~~~~~~~TODO~~~~~~~~~~~~~~~~~~~~~~ """
-
-from param import Param
-
-
-def split_and_classify(data, target, split_col):
-    identifier = "data_{}_".format(split_col)
-    column = data[:, split_col]
-
-    uniques = Param.f(identifier + "uniques", np.unique, column)
-    groups = [(v, np.where(column == v)) for v in uniques]
-
-    prediction = np.zeros(data.shape[0])
-    for v, group in groups:
-        tmp_identifier = identifier + str(v)
-        tmp_target = None if target is None else target[group]
-        tmp_pred = classify(data[group], tmp_target, tmp_identifier)
-        prediction[group] = tmp_pred
-
-    return prediction
-
-
-def classify(data, target, data_identifier):
-
-    def sgd_classify_and_score(loss, penalty):
-        def get_classifier():
-            clf = SGDClassifier(loss=loss, penalty=penalty, n_iter=20, random_state=8675309, shuffle=True, class_weight="auto")
-            clf.fit(data, target)
-            clf_score = score(target, clf.predict(data))
-            return clf, clf_score
-
-        identifier = '_'.join((data_identifier, loss, penalty, "classifier"))
-        clf, clf_score = Param.f(identifier, get_classifier)
-        return clf.predict(data), clf_score
-
-    """ in case target has only one value """
-    target_unique = Param.f(
-        data_identifier + "_target_unique", np.unique, target)
-    if len(target_unique) == 1:
-        return target_unique[0] * np.ones(data.shape[0])
-
-    # losses = ['hinge', 'log', 'modified_huber', 'perceptron', 'huber',
-    # 'epsilon_insensitive']
-    losses = ['hinge', 'log', 'huber']
-    penalties = ['l1', 'l2']
-    # penalties = ['l1']
-
-    predictions = []
-    for loss in losses:
-        for penalty in penalties:
-            predictions.append(sgd_classify_and_score(loss, penalty))
-
-    prediction = combine_predictions(predictions)
-    return prediction
-
-
-def feature_selection(data, target, keep_cols=[], short_circuit=False):
-    def get_keep_features():
-        if short_circuit:
-            return np.repeat([True], data.shape[1])
-        clf = SGDClassifier(loss='hinge', penalty='l1', n_iter=10, n_jobs=2, random_state=8675309, shuffle=True, class_weight="auto")
-        clf.fit(data, target)
-        return clf.coef_[0, :] != 0
-
-    keep_features = Param.f("keep_features", get_keep_features)
-    keep_features[keep_cols] = True
-    """ get the new indices of keep_cols """
-    kept_cols = keep_features.cumsum()[keep_cols] - 1
-    return data[:, keep_features], kept_cols
-
-
-def tempfile(delete=False):
-    """Creates temporary file.
-
-    Parameters
-    ----------
-    delete : boolean, optional, default: False
-             Whether or not the temporary file is deleted immediately when closed.
-
-    Returns
-    -------
-    temporary_file : A named temporary file with name attribute.
-    """
-    from tempfile import NamedTemporaryFile
-    return NamedTemporaryFile(delete=delete)
